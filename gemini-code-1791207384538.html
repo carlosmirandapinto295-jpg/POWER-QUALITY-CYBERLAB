@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Power Quality CyberLab v3.0 - Neon CyberGrid Edition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg-dark: #020617;
+    --panel-bg: rgba(15, 23, 42, 0.85);
+    --border-color: rgba(0, 243, 255, 0.3);
+    --neon-cyan: #00f3ff;
+    --neon-orange: #ff6600;
+    --neon-green: #10b981;
+    --neon-red: #ef4444;
+    --neon-yellow: #f59e0b;
+    --neon-purple: #a855f7;
+    --neon-pink: #ec4899;
+    --text-primary: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+  body {
+    background-color: var(--bg-dark);
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.2) 0%, transparent 55%),
+      radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 10% 90%, rgba(236, 72, 153, 0.12) 0%, transparent 45%),
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 35px 35px, 35px 35px;
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 16px;
+    overflow-x: hidden;
+  }
+
+  /* HERO BANNER DE INICIO LLAMATIVO Y COLORIDO */
+  .hero-banner {
+    position: relative;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+    border: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink)) 1;
+    border-radius: 20px;
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 35px rgba(0, 243, 255, 0.25), inset 0 0 15px rgba(168, 85, 247, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0,243,255,0.1) 0%, transparent 70%);
+    animation: pulseGlow 6s infinite alternate ease-in-out;
+    pointer-events: none;
+  }
+
+  @keyframes pulseGlow {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    100% { transform: scale(1.1); opacity: 0.9; }
+  }
+
+  .app-title h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #00f3ff, #10b981, #a855f7, #ec4899);
+    background-size: 300% 300%;
+    animation: gradientShift 6s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .app-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--neon-green);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+
+  .led-pulse {
+    width: 8px;
+    height: 8px;
+    background-color: var(--neon-green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--neon-green);
+    animation: blink 1.2s infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .header-controls { display: flex; gap: 12px; align-items: center; z-index: 2; }
+
+  .hud-btn {
+    background: rgba(3, 7, 18, 0.7);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hud-btn:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px var(--neon-cyan); transform: translateY(-2px); }
+  .hud-btn.active { background: var(--neon-green); color: #000; border-color: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); }
+
+  /* Layout Grid */
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 1200px) { .layout-grid { grid-template-columns: 1fr; } }
+
+  .panel-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-size: 0.92rem;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+    padding-bottom: 8px;
+  }
+
+  /* Configuration Section */
+  .email-box {
+    background: rgba(0, 243, 255, 0.05);
+    border: 1px dashed var(--neon-cyan);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+  }
+  .email-box:focus-within {
+    background: rgba(0, 243, 255, 0.12);
+    border-style: solid;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+  }
+  .email-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--neon-cyan);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .email-input {
+    width: 100%;
+    background: #030712;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+  }
+  .email-input:focus { border-color: var(--neon-cyan); }
+
+  /* Event Grid */
+  .event-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .event-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .event-card:hover {
+    border-color: var(--neon-cyan);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 243, 255, 0.25);
+  }
+
+  .event-card.active {
+    background: linear-gradient(135deg, rgba(0, 243, 255, 0.3), rgba(168, 85, 247, 0.3));
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+  }
+
+  .event-card .icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+  .event-card .name { font-size: 0.75rem; font-weight: 700; color: var(--text-primary); }
+
+  /* Sliders Controls */
+  .control-group { margin-bottom: 14px; }
+  .control-head { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
+  .control-head .val { font-family: monospace; font-weight: 700; color: var(--neon-cyan); font-size: 0.95rem; }
+
+  input[type="range"] {
+    width: 100%; height: 6px; background: #0f172a; border-radius: 3px; outline: none; -webkit-appearance: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--neon-cyan); cursor: pointer; box-shadow: 0 0 12px var(--neon-cyan);
+  }
+
+  /* Gauges & Power Display */
+  .gauges-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 768px) { .gauges-container { grid-template-columns: repeat(2, 1fr); } }
+
+  .gauge-card {
+    background: rgba(3, 7, 18, 0.85);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+  }
+  .gauge-card canvas { width: 100% !important; height: 85px !important; }
+  .gauge-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .gauge-val { font-size: 1.15rem; font-weight: 800; font-family: monospace; color: var(--neon-cyan); }
+
+  .power-vector-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .pv-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+  }
+  .pv-title { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+  .pv-val { font-size: 1rem; font-weight: 800; font-family: monospace; color: var(--neon-green); margin-top: 2px; }
+
+  /* Tabs Nav */
+  .view-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+  .tab-btn.active {
+    color: #000;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 15px var(--neon-cyan);
+  }
+
+  /* Display Frame & Canvas */
+  .display-frame {
+    position: relative;
+    background: #02040a;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    overflow: hidden;
+    box-shadow: inset 0 0 35px rgba(0,0,0,0.9);
+  }
+
+  .display-frame canvas { display: block; width: 100%; height: 390px; }
+
+  /* Console Terminal */
+  .console-log {
+    background: #02040a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    height: 105px;
+    overflow-y: auto;
+    color: var(--neon-green);
+    margin-top: 16px;
+  }
+  .log-entry { margin-bottom: 4px; display: flex; gap: 10px; }
+  .log-time { color: var(--text-muted); }
+  .log-warn { color: var(--neon-yellow); }
+  .log-danger { color: var(--neon-red); }
+
+  /* Action Buttons Grid */
+  .action-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .btn-action {
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--neon-cyan), #0077ff);
+    color: #000;
+    box-shadow: 0 0 18px rgba(0, 243, 255, 0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 0 28px rgba(0, 243, 255, 0.8); transform: translateY(-2px); }
+  .btn-dark {
+    background: #0f172a;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-dark:hover { border-color: var(--neon-cyan); background: #1e293b; }
+
+  #toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: #030712; border: 1px solid var(--neon-cyan);
+    color: #fff; padding: 14px 22px; border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
+    transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO HEADER DE INICIO COLORIDO -->
+<div class="hero-banner">
+  <div class="app-title">
+    <h1><span>⚡</span> Power Quality CyberLab <span style="font-size:0.7rem; color:var(--neon-cyan); border:1px solid; padding:3px 10px; border-radius:8px; background:rgba(0,243,255,0.15);">v3.0 CYBERGRID</span></h1>
+    <div class="app-subtitle">
+      <span class="status-badge"><span class="led-pulse"></span> SISTEMA ONLINE</span>
+      <span>| Monitoreo de Calidad de Potencia & Análisis de Distorsión</span>
+    </div>
+  </div>
+  <div class="header-controls">
+    <button class="hud-btn" id="freezeToggle">⏸️ Congelar Scope</button>
+    <button class="hud-btn" id="audioToggle">🔊 Sonido Red: OFF</button>
+    <div style="font-family: monospace; color: var(--neon-green); font-weight:800; font-size:1rem; background:rgba(16,185,129,0.12); padding:8px 14px; border-radius:10px; border:1px solid rgba(16,185,129,0.4);" id="sysClock">00:00:00</div>
+  </div>
+</div>
+
+<div class="layout-grid">
+  <!-- IZQUIERDA: CONTROLES -->
+  <div>
+    <!-- EMAIL Y GOOGLE APPS SCRIPT -->
+    <div class="panel-card" style="margin-bottom:16px;">
+      <div class="panel-title"><span>📧 Configuración de Envío de Datos</span></div>
+      
+      <div class="email-box">
+        <label class="email-label" for="scriptUrlInput">1. URL Web App Google Apps Script:</label>
+        <input type="url" id="scriptUrlInput" class="email-input" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+
+      <div class="email-box">
+        <label class="email-label" for="userEmail">2. Enviar Reporte PDF / Correo a:</label>
+        <input type="email" id="userEmail" class="email-input" placeholder="ejemplo@gmail.com" value="moncadalaura322@gmail.com">
+      </div>
+    </div>
+
+    <!-- MODULADOR DE EVENTOS -->
+    <div class="panel-card">
+      <div class="panel-title"><span>🎛️️ Simulador de Eventos Eléctricos</span></div>
+      
+      <div class="event-grid">
+        <div class="event-card active" data-event="normal"><span class="icon">✅</span><span class="name">Normal</span></div>
+        <div class="event-card" data-event="sag"><span class="icon">📉</span><span class="name">Hueco</span></div>
+        <div class="event-card" data-event="swell"><span class="icon">📈</span><span class="name">Sobretensión</span></div>
+        <div class="event-card" data-event="interrupt"><span class="icon">⛔</span><span class="name">Corte</span></div>
+        <div class="event-card" data-event="harmonic"><span class="icon">🌊</span><span class="name">Armónicos</span></div>
+        <div class="event-card" data-event="flicker"><span class="icon">💡</span><span class="name">Flicker</span></div>
+      </div>
+
+      <div class="panel-title"><span>⚙️ Ajuste de Parámetros Medidos</span></div>
+
+      <div class="control-group">
+        <div class="control-head"><span>Tensión Nominal (Vrms)</span><span class="val" id="vVal">230 V</span></div>
+        <input type="range" id="voltage" min="0" max="300" value="230" step="1">
+      </div>
+
+      <div class="control-group">
+        <div class="control-head"><span>Frecuencia Fundamental (f)</span><span class="val" id="fVal">50.0 Hz</span></div>
+        <input type="range" id="frequency" min="45" max="55" value="50" step="0.1">
+      </div>
+
+      <div class="control-group">
+        <div class="control-head"><span>Corriente Carga (Irms)</span><span class="val" id="iVal">15.0 A</span></div>
+        <input type="range" id="current" min="0" max="60" value="15" step="0.5">
+      </div>
+
+      <div class="control-group">
+        <div class="control-head"><span>Factor de Potencia (cos φ)</span><span class="val" id="pfVal">0.95</span></div>
+        <input type="range" id="pf" min="0.1" max="1" value="0.95" step="0.01">
+      </div>
+
+      <div class="control-group">
+        <div class="control-head"><span>Distorsión Armónica THD (%)</span><span class="val" id="thdVal">2.0 %</span></div>
+        <input type="range" id="thd" min="0" max="35" value="2" step="0.5">
+      </div>
+
+      <div class="action-grid">
+        <button class="btn-action btn-primary" onclick="sendDataToGAS()">📤 Enviar a Google</button>
+        <button class="btn-action btn-dark" onclick="downloadCSV()">💾 Hoja Excel</button>
+        <button class="btn-action btn-dark" onclick="resetParams()">🔄 Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DERECHA: PANELES Y DIBUJO CANVASES -->
+  <div>
+    <!-- MEDIDORES ANALÓGICOS -->
+    <div class="gauges-container">
+      <div class="gauge-card">
+        <canvas id="gaugeV"></canvas>
+        <div class="gauge-label">Tensión Vrms</div>
+        <div class="gauge-val" id="gValV">230 V</div>
+      </div>
+      <div class="gauge-card">
+        <canvas id="gaugeI"></canvas>
+        <div class="gauge-label">Corriente Irms</div>
+        <div class="gauge-val" id="gValI" style="color:var(--neon-orange)">15.0 A</div>
+      </div>
+      <div class="gauge-card">
+        <canvas id="gaugeF"></canvas>
+        <div class="gauge-label">Frecuencia</div>
+        <div class="gauge-val" id="gValF" style="color:var(--neon-green)">50.0 Hz</div>
+      </div>
+      <div class="gauge-card">
+        <canvas id="gaugeTHD"></canvas>
+        <div class="gauge-label">Distorsión THD</div>
+        <div class="gauge-val" id="gValTHD" style="color:var(--neon-yellow)">2.0 %</div>
+      </div>
+    </div>
+
+    <!-- VECTORES DE POTENCIA -->
+    <div class="power-vector-grid">
+      <div class="pv-card"><div class="pv-title">Potencia Activa (P)</div><div class="pv-val" id="pAct">3.28 kW</div></div>
+      <div class="pv-card"><div class="pv-title">Potencia Reactiva (Q)</div><div class="pv-val" id="pRea" style="color:var(--neon-yellow)">1.08 kVAr</div></div>
+      <div class="pv-card"><div class="pv-title">Potencia Aparente (S)</div><div class="pv-val" id="pApp" style="color:var(--neon-cyan)">3.45 kVA</div></div>
+      <div class="pv-card"><div class="pv-title">Desviación Frec.</div><div class="pv-val" id="fDev" style="color:var(--neon-purple)">0.00 %</div></div>
+    </div>
+
+    <!-- PANTALLA VISUALIZADORA -->
+    <div class="panel-card">
+      <div class="view-tabs">
+        <button class="tab-btn active" data-tab="scope">📺 Osciloscopio Multicanal</button>
+        <button class="tab-btn" data-tab="grid">🔌 Topología Red</button>
+        <button class="tab-btn" data-tab="fft">📊 Espectro FFT</button>
+        <button class="tab-btn" data-tab="phasor">📐 Diagrama Fasorial</button>
+      </div>
+
+      <div class="display-frame">
+        <canvas id="mainCanvas"></canvas>
+      </div>
+
+      <!-- TERMINAL DE REGISTRO EN VIVO -->
+      <div class="console-log" id="consoleLog">
+        <div class="log-entry"><span class="log-time">[00:00:00]</span> Sistema CyberGrid v3.0 iniciado correctamente.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast">Notificación</div>
+
+<script>
+// ESTADO GLOBAL DE LA APLICACIÓN
+let DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/.../exec';
+
+const state = {
+  event: 'normal',
+  tab: 'scope',
+  voltage: 230,
+  frequency: 50,
+  current: 15,
+  pf: 0.95,
+  thd: 2,
+  time: 0,
+  audioActive: false,
+  isFrozen: false,
+  userEmail: localStorage.getItem('powerlab_email') || 'moncadalaura322@gmail.com',
+  scriptUrl: localStorage.getItem('powerlab_script_url') || DEFAULT_SCRIPT_URL
+};
+
+document.getElementById('userEmail').value = state.userEmail;
+document.getElementById('userEmail').addEventListener('input', (e) => {
+  state.userEmail = e.target.value.trim();
+  localStorage.setItem('powerlab_email', state.userEmail);
+});
+
+document.getElementById('scriptUrlInput').value = state.scriptUrl.includes('AKfycb...') ? '' : state.scriptUrl;
+document.getElementById('scriptUrlInput').addEventListener('input', (e) => {
+  state.scriptUrl = e.target.value.trim();
+  localStorage.setItem('powerlab_script_url', state.scriptUrl);
+});
+
+// SISTEMA DE AUDIO DE RED
+let audioCtx = null, osc = null, gainNode = null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  osc = audioCtx.createOscillator();
+  gainNode = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+  gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  osc.start();
+}
+
+document.getElementById('audioToggle').addEventListener('click', function() {
+  state.audioActive = !state.audioActive;
+  this.classList.toggle('active', state.audioActive);
+  this.textContent = state.audioActive ? '🔊 Sonido Red: ON' : '🔊 Sonido Red: OFF';
+  if (state.audioActive) {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+});
+
+document.getElementById('freezeToggle').addEventListener('click', function() {
+  state.isFrozen = !state.isFrozen;
+  this.classList.toggle('active', state.isFrozen);
+  this.textContent = state.isFrozen ? '▶️ Reanudar Scope' : '⏸️ Congelar Scope';
+  logConsole(state.isFrozen ? "⏸️ Osciloscopio pausado." : "▶ Osciloscopio en tiempo real.");
+});
+
+function updateClock() {
+  document.getElementById('sysClock').textContent = new Date().toTimeString().split(' ')[0];
+}
+setInterval(updateClock, 1000);
+
+function logConsole(msg, type = 'normal') {
+  const consoleEl = document.getElementById('consoleLog');
+  const timeStr = new Date().toTimeString().split(' ')[0];
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  let typeClass = type === 'warn' ? 'log-warn' : (type === 'danger' ? 'log-danger' : '');
+  entry.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="${typeClass}">${msg}</span>`;
+  consoleEl.appendChild(entry);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+// CANVAS OSCILOSCOPIO Y TOPOLOGÍA
+const mainCanvas = document.getElementById('mainCanvas');
+const ctx = mainCanvas.getContext('2d');
+
+function resizeCanvases() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = mainCanvas.getBoundingClientRect();
+  mainCanvas.width = rect.width * dpr;
+  mainCanvas.height = rect.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvases);
+
+function drawScope(w, h) {
+  ctx.fillStyle = '#02040a'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(0, 243, 255, 0.08)'; ctx.lineWidth = 1;
+  for (let x = 0; x <= w; x += w/10) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y <= h; y += h/8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  ctx.strokeStyle = 'rgba(0, 243, 255, 0.25)';
+  ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+
+  const cy = h / 2;
+  const ampV = (h * 0.3) * (state.voltage / 230);
+  const ampI = (h * 0.22) * (state.current / 50);
+  const phaseShift = Math.acos(Math.min(1, Math.max(-1, state.pf)));
+
+  // Tensión (Cyan)
+  ctx.lineWidth = 2.5; ctx.strokeStyle = '#00f3ff'; ctx.shadowColor = '#00f3ff'; ctx.shadowBlur = 8;
+  ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = (x / w) * 4 * Math.PI + state.time;
+    let vMod = Math.sin(t * (state.frequency / 50));
+    if (state.event === 'sag') vMod *= 0.6;
+    if (state.event === 'swell') vMod *= 1.3;
+    if (state.event === 'interrupt') vMod *= 0.02;
+    if (state.event === 'flicker') vMod *= (1 + 0.2 * Math.sin(t * 0.3));
+    if (state.thd > 0 && (state.event === 'harmonic' || state.event === 'normal')) {
+      const thdF = state.thd / 100;
+      vMod += Math.sin(3 * t) * thdF * 0.5 + Math.sin(5 * t) * thdF * 0.3;
+    }
+    const y = cy - vMod * ampV;
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Corriente (Naranja)
+  ctx.strokeStyle = '#ff6600'; ctx.shadowColor = '#ff6600';
+  ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    const t = (x / w) * 4 * Math.PI + state.time;
+    let iMod = Math.sin(t * (state.frequency / 50) - phaseShift);
+    if (state.event === 'sag') iMod *= 0.6;
+    if (state.event === 'swell') iMod *= 1.2;
+    if (state.event === 'interrupt') iMod *= 0.01;
+    const y = cy - iMod * ampI;
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.shadowBlur = 0;
+
+  ctx.font = 'bold 11px monospace'; ctx.fillStyle = '#00f3ff'; ctx.fillText('CH1: Tensión (V)', 15, 25);
+  ctx.fillStyle = '#ff6600'; ctx.fillText('CH2: Corriente (I)', 150, 25);
+}
+
+function drawGridTopology(w, h) {
+  ctx.fillStyle = '#02040a'; ctx.fillRect(0, 0, w, h);
+  const cy = h / 2;
+  const nodes = [
+    { name: "Generación Subestación", x: w * 0.18, icon: "🏭" },
+    { name: "Transformador Red", x: w * 0.5, icon: "⚡" },
+    { name: "Carga Industrial", x: w * 0.82, icon: "🏢" }
+  ];
+
+  ctx.strokeStyle = state.event === 'interrupt' ? '#334155' : '#00f3ff';
+  ctx.lineWidth = 4; ctx.shadowColor = '#00f3ff'; ctx.shadowBlur = state.event === 'interrupt' ? 0 : 10;
+  ctx.beginPath(); ctx.moveTo(nodes[0].x, cy); ctx.lineTo(nodes[2].x, cy); ctx.stroke(); ctx.shadowBlur = 0;
+
+  if (state.event !== 'interrupt') {
+    ctx.fillStyle = state.event === 'swell' ? '#ef4444' : '#10b981';
+    for (let i = 0; i < 10; i++) {
+      const pX = (nodes[0].x + ((state.time * 90 + i * (w * 0.07)) % (nodes[2].x - nodes[0].x)));
+      ctx.beginPath(); ctx.arc(pX, cy, 5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  nodes.forEach(n => {
+    ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(n.x, cy, 32, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(n.icon, n.x, cy + 8);
+    ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = '#cbd5e1'; ctx.fillText(n.name, n.x, cy + 52);
+  });
+}
+
+function drawFFT(w, h) {
+  ctx.fillStyle = '#02040a'; ctx.fillRect(0, 0, w, h);
+  const harmonics = [1, 3, 5, 7, 9, 11, 13, 15];
+  const barW = w / (harmonics.length * 2);
+  const baseY = h - 50;
+
+  harmonics.forEach((hOrder, i) => {
+    let mag = hOrder === 1 ? 100 : (state.thd / (hOrder * 0.75));
+    if (state.event !== 'harmonic' && state.event !== 'normal') mag = hOrder === 1 ? 100 : 0.5;
+
+    const barH = (mag / 100) * (h - 100);
+    const x = 45 + i * (barW * 1.85);
+
+    const grad = ctx.createLinearGradient(0, baseY - barH, 0, baseY);
+    if (hOrder === 1) { grad.addColorStop(0, '#00f3ff'); grad.addColorStop(1, '#0055ff'); }
+    else { grad.addColorStop(0, '#ef4444'); grad.addColorStop(1, '#f59e0b'); }
+
+    ctx.fillStyle = grad; ctx.fillRect(x, baseY - barH, barW, barH);
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`h${hOrder}`, x + barW / 2, baseY + 20);
+    ctx.fillText(`${mag.toFixed(1)}%`, x + barW / 2, baseY - barH - 8);
+  });
+}
+
+function drawPhasor(w, h) {
+  ctx.fillStyle = '#02040a'; ctx.fillRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2, radius = Math.min(w, h) * 0.35;
+
+  ctx.strokeStyle = 'rgba(0, 243, 255, 0.2)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - radius - 20, cy); ctx.lineTo(cx + radius + 20, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy - radius - 20); ctx.lineTo(cx, cy + radius + 20); ctx.stroke();
+
+  const rot = (state.time * 2) % (Math.PI * 2);
+  const phaseShift = Math.acos(Math.min(1, Math.max(-1, state.pf)));
+
+  const vx = cx + radius * (state.voltage / 230) * Math.cos(rot);
+  const vy = cy - radius * (state.voltage / 230) * Math.sin(rot);
+  ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(vx, vy); ctx.stroke();
+
+  const ix = cx + (radius * 0.8) * (state.current / 50) * Math.cos(rot - phaseShift);
+  const iy = cy - (radius * 0.8) * (state.current / 50) * Math.sin(rot - phaseShift);
+  ctx.strokeStyle = '#ff6600'; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ix, iy); ctx.stroke();
+
+  ctx.fillStyle = '#ffffff'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
+  ctx.fillText(`Desfase φ = ${(phaseShift * 180 / Math.PI).toFixed(1)}°`, cx, cy + radius + 35);
+}
+
+function drawGauge(canvasId, value, min, max, color) {
+  const c = document.getElementById(canvasId); if (!c) return;
+  const gCtx = c.getContext('2d');
+  const w = c.width = c.clientWidth, h = c.height = c.clientHeight;
+  gCtx.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h * 0.85, r = Math.min(w, h) * 0.65;
+
+  gCtx.strokeStyle = '#1e293b'; gCtx.lineWidth = 8;
+  gCtx.beginPath(); gCtx.arc(cx, cy, r, Math.PI, 2 * Math.PI); gCtx.stroke();
+
+  const pct = Math.min(1, Math.max(0, (value - min) / (max - min)));
+  const angle = Math.PI + pct * Math.PI;
+
+  gCtx.strokeStyle = color; gCtx.shadowColor = color; gCtx.shadowBlur = 6;
+  gCtx.beginPath(); gCtx.arc(cx, cy, r, Math.PI, angle); gCtx.stroke(); gCtx.shadowBlur = 0;
+
+  gCtx.strokeStyle = '#fff'; gCtx.lineWidth = 2;
+  gCtx.beginPath(); gCtx.moveTo(cx, cy);
+  gCtx.lineTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+  gCtx.stroke();
+}
+
+function animate() {
+  if (!state.isFrozen) state.time += 0.04;
+
+  const rect = mainCanvas.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+
+  if (state.tab === 'scope') drawScope(w, h);
+  if (state.tab === 'grid') drawGridTopology(w, h);
+  if (state.tab === 'fft') drawFFT(w, h);
+  if (state.tab === 'phasor') drawPhasor(w, h);
+
+  drawGauge('gaugeV', state.voltage, 0, 300, '#00f3ff');
+  drawGauge('gaugeI', state.current, 0, 60, '#ff6600');
+  drawGauge('gaugeF', state.frequency, 45, 55, '#10b981');
+  drawGauge('gaugeTHD', state.thd, 0, 35, '#f59e0b');
+
+  requestAnimationFrame(animate);
+}
+
+function updateCalculations() {
+  const V = state.voltage, I = state.current, pf = state.pf;
+  const P = (V * I * pf / 1000);
+  const S = (V * I / 1000);
+  const Q = Math.sqrt(Math.max(0, S * S - P * P));
+  const fDev = ((state.frequency - 50) / 50) * 100;
+
+  document.getElementById('pAct').textContent = P.toFixed(2) + ' kW';
+  document.getElementById('pRea').textContent = Q.toFixed(2) + ' kVAr';
+  document.getElementById('pApp').textContent = S.toFixed(2) + ' kVA';
+  document.getElementById('fDev').textContent = fDev.toFixed(2) + ' %';
+}
+
+document.querySelectorAll('.event-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    state.event = card.dataset.event;
+
+    if (state.event === 'sag') { state.voltage = 175; logConsole("📉 Hueco de tensión (Sag -23.9%)", "warn"); }
+    else if (state.event === 'swell') { state.voltage = 270; logConsole("📈 Sobretensión (Swell +17.3%)", "danger"); }
+    else if (state.event === 'interrupt') { state.voltage = 0; logConsole("⛔ Interrupción del suministro", "danger"); }
+    else if (state.event === 'harmonic') { state.thd = 18; logConsole("🌊 Distorsión armónica THD > 15%", "warn"); }
+    else { state.voltage = 230; state.thd = 2; logConsole("✅ Parámetros dentro de rango nominal"); }
+
+    document.getElementById('voltage').value = state.voltage;
+    document.getElementById('thd').value = state.thd;
+    updateUIValues();
+  });
+});
+
+['voltage', 'frequency', 'current', 'pf', 'thd'].forEach(id => {
+  document.getElementById(id).addEventListener('input', (e) => {
+    state[id] = parseFloat(e.target.value);
+    updateUIValues();
+  });
+});
+
+function updateUIValues() {
+  document.getElementById('vVal').textContent = state.voltage + ' V';
+  document.getElementById('fVal').textContent = state.frequency.toFixed(1) + ' Hz';
+  document.getElementById('iVal').textContent = state.current.toFixed(1) + ' A';
+  document.getElementById('pfVal').textContent = state.pf.toFixed(2);
+  document.getElementById('thdVal').textContent = state.thd.toFixed(1) + ' %';
+
+  document.getElementById('gValV').textContent = state.voltage + ' V';
+  document.getElementById('gValI').textContent = state.current.toFixed(1) + ' A';
+  document.getElementById('gValF').textContent = state.frequency.toFixed(1) + ' Hz';
+  document.getElementById('gValTHD').textContent = state.thd.toFixed(1) + ' %';
+
+  updateCalculations();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.tab = btn.dataset.tab;
+  });
+});
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.transform = 'translateY(0)';
+  toast.style.opacity = '1';
+  setTimeout(() => {
+    toast.style.transform = 'translateY(100px)';
+    toast.style.opacity = '0';
+  }, 3500);
+}
+
+function resetParams() {
+  state.voltage = 230; state.frequency = 50; state.current = 15; state.pf = 0.95; state.thd = 2; state.event = 'normal';
+  document.getElementById('voltage').value = 230;
+  document.getElementById('frequency').value = 50;
+  document.getElementById('current').value = 15;
+  document.getElementById('pf').value = 0.95;
+  document.getElementById('thd').value = 2;
+  updateUIValues();
+  logConsole("🔄 Sistema restaurado a valores por defecto.");
+}
+
+// ENVÍO DE DATOS A GOOGLE APPS SCRIPT
+async function sendDataToGAS() {
+  const targetUrl = state.scriptUrl || document.getElementById('scriptUrlInput').value.trim();
+
+  if (!targetUrl || !targetUrl.startsWith('https://script.google.com/macros/s/')) {
+    showToast('⚠️ Pega una URL válida de Apps Script arriba');
+    logConsole("❌ Error: Falta configurar la URL de Apps Script.", "danger");
+    return;
+  }
+
+  if (!state.userEmail || !state.userEmail.includes('@')) {
+    showToast('⚠️ Escribe un correo de Google válido');
+    logConsole("⚠️ Fallo: Correo electrónico inválido", "warn");
+    return;
+  }
+
+  showToast(`⏳ Enviando informe a ${state.userEmail}...`);
+  logConsole(`📤 Transmitiendo datos a ${state.userEmail}...`);
+  
+  const P = (state.voltage * state.current * state.pf / 1000).toFixed(2);
+  const S = (state.voltage * state.current / 1000).toFixed(2);
+
+  const payload = {
+    email: state.userEmail,
+    event: state.event,
+    voltage: state.voltage,
+    frequency: state.frequency,
+    current: state.current,
+    pf: state.pf,
+    thd: state.thd,
+    pAct: P,
+    pApp: S,
+    timestamp: new Date().toLocaleString('es-CO')
+  };
+
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+
+    showToast(`✅ Reporte enviado con éxito a ${state.userEmail}`);
+    logConsole(`✅ Datos registrados y correo entregado a: ${state.userEmail}`);
+  } catch(e) {
+    showToast('❌ Ocurrió un error al conectar con Google');
+    logConsole("❌ Fallo de transmisión a Google Apps Script", "danger");
+  }
+}
+
+// GENERACIÓN DE HOJA EXCEL ORDENADA CON DELIMITADOR DE COLUMNAS
+function downloadCSV() {
+  const time = new Date().toLocaleString('es-CO');
+  const P = (state.voltage * state.current * state.pf / 1000).toFixed(2);
+  const S = (state.voltage * state.current / 1000).toFixed(2);
+
+  // Usar marca UTF-8 BOM y punto y coma (;) para que Excel organice las celdas automáticamente
+  const bom = "\uFEFF";
+  const header = "Fecha/Hora;Correo Usuario;Evento;Tension Vrms (V);Frecuencia (Hz);Corriente Irms (A);Factor Potencia;THD (%);Potencia Activa (kW);Potencia Aparente (kVA)\n";
+  const row = `"${time}";"${state.userEmail}";"${state.event.toUpperCase()}";${state.voltage};${state.frequency};${state.current};${state.pf};${state.thd};${P};${S}\n`;
+
+  const blob = new Blob([bom + header + row], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Informe_CyberGrid_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Hoja Excel descargada en columnas organizadas');
+}
+
+window.onload = () => {
+  resizeCanvases();
+  updateUIValues();
+  animate();
+};
+</script>
+</body>
+</html>
